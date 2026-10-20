@@ -1,0 +1,46 @@
+resources:
+  jobs:
+    tpc_a_job:
+      name: tpc_a_job
+      tasks:
+        - task_key: bronze_Ingestion
+          notebook_task:
+            notebook_path: /Workspace/Users/kiritjain@cyntexa.com/TPC-A/01_bronze_ingestion
+            source: WORKSPACE
+          max_retries: 2
+          min_retry_interval_millis: 900000
+          disable_auto_optimization: true
+        - task_key: silver_cleaning
+          depends_on:
+            - task_key: bronze_Ingestion
+          notebook_task:
+            notebook_path: /Workspace/Users/kiritjain@cyntexa.com/TPC-A/02_silver_cleaning
+            source: WORKSPACE
+          max_retries: 2
+          min_retry_interval_millis: 900000
+          disable_auto_optimization: true
+        - task_key: gold_build
+          depends_on:
+            - task_key: silver_cleaning
+          notebook_task:
+            notebook_path: /Workspace/Users/kiritjain@cyntexa.com/TPC-A/03_gold_build
+            source: WORKSPACE
+          max_retries: 1
+          min_retry_interval_millis: 900000
+          disable_auto_optimization: true
+        - task_key: quality_checks
+          depends_on:
+            - task_key: gold_build
+          notebook_task:
+            notebook_path: /Workspace/Users/kiritjain@cyntexa.com/TPC-A/04_quality_checks
+            source: WORKSPACE
+          min_retry_interval_millis: 900000
+          disable_auto_optimization: true
+      queue:
+        enabled: true
+      parameters:
+        - name: catalog
+          default: tpc_a_dev
+        - name: job_run_id
+          default: "{{job.run_id}}"
+      performance_target: PERFORMANCE_OPTIMIZED
